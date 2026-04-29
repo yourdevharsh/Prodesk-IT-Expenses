@@ -5,25 +5,67 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Expenses</title>
+
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <h1 id="salaryAmt">0</h1>
-    <h1 id="totalExp">0</h1>
+    <h1>Expense</h1>
+    <div class="mainValues">
+      <p>
+        Total Salary:
+        <span class="currencySign">₹</span>
+        <span id="salaryAmt" class="convertible" data-baseValue="0">0</span>
+      </p>
+      <p>
+        Remaining Balance:
+        <span class="currencySign">₹</span>
+        <span id="totalExp" class="convertible" data-baseValue="0">0</span>
+      </p>
+    </div>
+
+    <div class="currencyChanger">
+      <label for="currencySelect">Select Currency: </label>
+      <select id="currencySelect">
+        <option value="INR">INR (₹)</option>
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+      </select>
+    </div>
+
     <form>
-      <input type="number" name="salaryInp" id="salaryInp" placeholder="Your Salary">
+      <input
+        type="number"
+        name="salaryInp"
+        id="salaryInp"
+        placeholder="Your Salary"
+      />
       <div>
-        <input type="text" name="expNameInp" id="expNameInp" placeholder="Expense Name" disabled>
-        <input type="number" name="expAmtInp" id="expAmtInp" placeholder="Expense Amount" disabled>
+        <input
+          type="text"
+          name="expNameInp"
+          id="expNameInp"
+          placeholder="Expense Name"
+          disabled
+        />
+        <input
+          type="number"
+          name="expAmtInp"
+          id="expAmtInp"
+          placeholder="Expense Amount"
+          disabled
+        />
         <button id="addExpBtn" disabled>+</button>
       </div>
     </form>
-    <ul id="expList">
-      
-    </ul>
+    
+    <ul id="expList"></ul>
 
     <canvas id="chart"></canvas>
 
+    <button id="genPdfBtn">Generate PDF Report</button>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

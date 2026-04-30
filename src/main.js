@@ -16,9 +16,20 @@ const expListEl = document.getElementById("expList");
 let expenses = [];
 let totalExpense = 0;
 
+let currentRate = 1;
+let currentCurrency = "INR";
+
+currentCurrency = document.getElementById("currencySelect").value;
+if (currentCurrency !== "INR") {
+  currentRate = await getRate("INR", currentCurrency);
+}
+
 if (localStorage.getItem("salary")) {
   salaryAmtEl.innerText = localStorage.getItem("salary");
-  salaryAmtEl.setAttribute("data-baseValue", `${localStorage.getItem("salary")}`);
+  salaryAmtEl.setAttribute(
+    "data-baseValue",
+    `${localStorage.getItem("salary")}`,
+  );
   toggleExpInputs(false);
 }
 
@@ -41,8 +52,11 @@ if (localStorage.getItem("expenses")) {
   totalExpense = storedExpense;
   expListEl.appendChild(frag);
 
-  remainBal.innerText = `${Number(salaryAmtEl.innerText) - totalExpense}`;
-  remainBal.setAttribute("data-baseValue" , `${Number(salaryAmtEl.innerText) - totalExpense}`);
+  remainBal.setAttribute(
+    "data-baseValue",
+    `${Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense}`,
+  );
+  remainBal.innerText = `${Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense}`;
 } else {
   remainBal.innerText = `${Number(salaryAmtEl.innerText)}`;
   remainBal.setAttribute("data-baseValue", `${Number(salaryAmtEl.innerText)}`);
@@ -55,9 +69,11 @@ salaryInpEl.addEventListener("input", () => {
   let salaryValue = Number(salaryInpEl.value);
 
   if (salaryValue > 0) {
+    let baseSalaryValue = Number((salaryValue / currentRate).toFixed(2));
+    salaryAmtEl.setAttribute("data-baseValue", `${baseSalaryValue}`);
     salaryAmtEl.innerText = `${salaryValue}`;
-    salaryAmtEl.setAttribute("data-baseValue", `${salaryValue}`);
-    saveSalaryInStorage(salaryValue);
+
+    saveSalaryInStorage(baseSalaryValue);
     toggleExpInputs(false);
   } else {
     salaryAmtEl.innerText = `0`;
@@ -66,8 +82,15 @@ salaryInpEl.addEventListener("input", () => {
     toggleExpInputs(true);
   }
 
-  remainBal.innerText = Number(salaryAmtEl.innerText) - totalExpense;
-  remainBal.setAttribute("data-baseValue", `${Number(salaryAmtEl.innerText) - totalExpense}`);
+  remainBal.setAttribute(
+    "data-baseValue",
+    `${Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense}`,
+  );
+  remainBal.innerText =
+    Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense;
+
+  updateColor();
+  refreshUI();
 });
 
 function saveSalaryInStorage(value) {
@@ -104,22 +127,29 @@ function validateExpenseInputs() {
   }
 }
 
-addExpBtnEl.addEventListener("click", (e) => {
+addExpBtnEl.addEventListener("click", async (e) => {
   e.preventDefault();
 
   let expNameValue = expNameInpEl.value;
-  let expAmtValue = expAmtInpEl.value;
+  let expAmtValue = Number(expAmtInpEl.value);
 
-  totalExpense += Number(expAmtValue);
-  remainBal.innerText = Number(salaryAmtEl.innerText) - totalExpense;
-  remainBal.setAttribute("data-baseValue", `${Number(salaryAmtEl.innerText) - totalExpense}`);
+  let baseExpAmtValue = Number((expAmtValue / currentRate).toFixed(2));
 
+  totalExpense = Number((totalExpense + baseExpAmtValue).toFixed(2));
+
+  remainBal.setAttribute(
+    "data-baseValue",
+    `${Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense}`,
+  );
+
+  await refreshUI();
   updateColor();
+  alerForBal();
 
   const liEl = document.createElement("li");
   liEl.className = "expItem";
 
-  liEl.innerHTML = `<span>${expNameValue}</span> <span class="currencySign">₹</span> <span class="convertible" data-baseValue="${expAmtValue}">${expAmtValue}</span> <button class="deleteItemBtn">Delete</button>`;
+  liEl.innerHTML = `<span>${expNameValue}</span> <span class="currencySign">${symbols[currentCurrency]}</span> <span class="convertible" data-baseValue="${baseExpAmtValue}">${(baseExpAmtValue * currentRate).toFixed(2)}</span> <button class="deleteItemBtn">Delete</button>`;
 
   expListEl.appendChild(liEl);
 
@@ -127,11 +157,11 @@ addExpBtnEl.addEventListener("click", (e) => {
     expenses = JSON.parse(localStorage.getItem("expenses"));
   }
 
-  expenses.push([expNameValue, Number(expAmtValue)]);
+  expenses.push([expNameValue, baseExpAmtValue]);
 
   localStorage.setItem("expenses", JSON.stringify(expenses));
 
-  addDataToChart(pieChart, expNameValue, expAmtValue);
+  addDataToChart(pieChart, expNameValue, baseExpAmtValue);
 
   expNameInpEl.value = "";
   expAmtInpEl.value = "";
@@ -139,36 +169,50 @@ addExpBtnEl.addEventListener("click", (e) => {
 });
 
 function updateColor() {
-  if (Number(remainBal.innerText) < 0.1*Number(salaryAmtEl.innerText)) {
+  const baseRemain = Number(remainBal.getAttribute("data-baseValue"));
+  const baseSalary = Number(salaryAmtEl.getAttribute("data-baseValue"));
+
+  if (baseRemain < 0.1 * baseSalary) {
     remainBal.style.color = "red";
-    alert("Warning: Budget is too low!");
   } else {
     remainBal.style.color = "black";
   }
 }
 
-expListEl.addEventListener("click", (e) => {
+function alerForBal() {
+  if (Number(remainBal.innerText) < 0.1 * Number(salaryAmtEl.innerText)) {
+    alert("Warning: Balance is too low!");
+  }
+}
+
+expListEl.addEventListener("click", async (e) => {
   if (e.target.classList.contains("deleteItemBtn")) {
     const liEl = e.target.closest("li");
 
     const delExpName = liEl.children[0].innerText;
-    const delExpAmt = Number(liEl.children[2].innerText);
+    const delExpAmtBase = Number(
+      liEl.querySelector(".convertible").getAttribute("data-baseValue"),
+    );
 
     expenses = JSON.parse(localStorage.getItem("expenses"));
 
     for (let i = 0; i < expenses.length; i++) {
-      if (expenses[i][0] == delExpName && expenses[i][1] == delExpAmt) {
+      if (expenses[i][0] == delExpName && expenses[i][1] == delExpAmtBase) {
         expenses.splice(i, 1);
         break;
       }
     }
 
-    totalExpense -= delExpAmt;
+    totalExpense = Number((totalExpense - delExpAmtBase).toFixed(2));
 
-    remainBal.innerText = `${Number(salaryAmtEl.innerText) - totalExpense}`;
-    remainBal.setAttribute("data-baseValue", `${Number(salaryAmtEl.innerText) - totalExpense}`);
+    remainBal.setAttribute(
+      "data-baseValue",
+      `${Number(salaryAmtEl.getAttribute("data-baseValue")) - totalExpense}`,
+    );
 
-    deleteFromChart(pieChart, delExpName, delExpAmt);
+    await refreshUI();
+
+    deleteFromChart(pieChart, delExpName, delExpAmtBase);
 
     if (expenses.length == 0) {
       localStorage.removeItem("expenses");
@@ -182,6 +226,27 @@ expListEl.addEventListener("click", (e) => {
   }
 });
 
+function refreshUI() {
+  const convertibles = document.querySelectorAll(".convertible");
+
+  convertibles.forEach((conv) => {
+    const base = Number(conv.getAttribute("data-baseValue"));
+    conv.innerText = (base * currentRate).toFixed(2);
+  });
+
+  document
+    .querySelectorAll(".currencySign")
+    .forEach((s) => (s.innerText = symbols[currentCurrency]));
+
+  const baseSalary = Number(salaryAmtEl.getAttribute("data-baseValue") || 0);
+  const baseRemaining = baseSalary - totalExpense;
+
+  salaryAmtEl.innerText = (baseSalary * currentRate).toFixed(2);
+  remainBal.innerText = (baseRemaining * currentRate).toFixed(2);
+
+  updateColor();
+}
+
 /* PIE CHART */
 
 const chartCanvas = document.getElementById("chart");
@@ -193,7 +258,7 @@ const pieChart = new Chart(chartCanvas, {
     datasets: [
       {
         label: "Amount",
-        data: [Number(remainBal.innerText)].concat([
+        data: [Number(remainBal.getAttribute("data-baseValue"))].concat([
           ...expenses.map((expense) => expense[1]),
         ]),
         borderWidth: 1,
@@ -209,13 +274,16 @@ const pieChart = new Chart(chartCanvas, {
   },
 });
 
-function addDataToChart(chart, label, newData) {
+function addDataToChart(chart, label, baseData) {
   chart.data.labels.shift();
   chart.data.labels.unshift("Remaining");
   chart.data.datasets[0].data.shift();
-  chart.data.datasets[0].data.unshift(Number(remainBal.innerText));
+  chart.data.datasets[0].data.unshift(
+    Number(remainBal.getAttribute("data-baseValue")) * currentRate,
+  );
+
   chart.data.labels.push(label);
-  chart.data.datasets[0].data.push(newData);
+  chart.data.datasets[0].data.push(baseData * currentRate);
 
   chart.update();
 }
@@ -224,7 +292,7 @@ function deleteFromChart(chart, label, value) {
   let labels = [...chart.data.labels];
   let data = [...chart.data.datasets[0].data];
   labels[0] = "Remaining";
-  data[0] = Number(remainBal.innerText);
+  data[0] = Number(remainBal.getAttribute("data-baseValue"));
   for (let i = 1; i < labels.length; i++) {
     if (label == labels[i] && value == data[i]) {
       labels.splice(i, 1);
@@ -238,23 +306,38 @@ function deleteFromChart(chart, label, value) {
   chart.update();
 }
 
+function updateChartCurrency() {
+  const remainingBase = Number(remainBal.getAttribute("data-baseValue"));
+  let newData = [remainingBase * currentRate];
+
+  expenses.forEach((expense) => {
+    newData.push(expense[1] * currentRate);
+  });
+
+  pieChart.data.datasets[0].data = newData;
+  pieChart.update();
+}
+
 /* GENERATE PDF REPORT */
 
 const genPdfBtn = document.getElementById("genPdfBtn");
 
 genPdfBtn.addEventListener("click", () => {
   if (expenses.length == 0) {
+    alert("No report to be shown.");
     return;
   }
 
   const report = new window.jspdf.jsPDF();
 
+  report.text("Expense Report", 10, 20);
+
   const startX = 10;
-  const startY = 20;
+  const startY = 30;
   const cellWidth = 40;
   const cellHeight = 10;
 
-  const tableData = expenses.map(expense => [expense[0], String(expense[1])]);
+  const tableData = expenses.map((expense) => [expense[0], String((expense[1] * currentRate).toFixed(2))]);
   tableData.push(["Remaining", `${remainBal.innerText}`]);
   const rows = tableData;
 
@@ -276,7 +359,9 @@ genPdfBtn.addEventListener("click", () => {
 
 async function getRate(to, from) {
   try {
-    const response = await fetch(`https://api.frankfurter.dev/v2/rate/${to}/${from}`);
+    const response = await fetch(
+      `https://api.frankfurter.dev/v2/rate/${to}/${from}`,
+    );
     const data = await response.json();
     const rate = data["rate"];
     return rate;
@@ -285,28 +370,20 @@ async function getRate(to, from) {
   }
 }
 
-const currncySelectEl = document.getElementById('currencySelect');
+const currencySelectEl = document.getElementById("currencySelect");
 
 const signs = document.querySelectorAll(".currencySign");
-const symbols = { "INR": "₹", "USD": "$", "EUR": "€" };
+const symbols = { INR: "₹", USD: "$", EUR: "€" };
 
-currncySelectEl.addEventListener("input", async (e) => {
-  const newCurrency = e.target.value;
-  
-  let rate = 1;
+currencySelectEl.addEventListener("input", async (e) => {
+  currentCurrency = e.target.value;
 
-  if (newCurrency != "INR") {
-    rate = await getRate("INR", newCurrency);
+  if (currentCurrency != "INR") {
+    currentRate = await getRate("INR", currentCurrency);
+  } else {
+    currentRate = 1;
   }
 
-  const convertibles =  document.querySelectorAll(".convertible");
-  
-  convertibles.forEach((conv) => {
-    const baseValue = Number(conv.getAttribute("data-baseValue"));
-    const converted = baseValue * rate;
-
-    conv.innerText = converted.toFixed(2);
-  });
-
-  signs.forEach(s => s.innerText = symbols[newCurrency]);
+  refreshUI();
+  updateChartCurrency();
 });

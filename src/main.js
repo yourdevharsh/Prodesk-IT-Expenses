@@ -373,7 +373,7 @@ genPdfBtn.addEventListener("click", () => {
     });
   });
 
-  report.save("manual-table.pdf");
+  report.save("expense-report.pdf");
 });
 
 /* RATE CONVERSION */

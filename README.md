@@ -4,7 +4,7 @@ A dynamic, front-end dashboard built for the Prodesk IT Week 2 Internship Assign
 
 This project was built entirely with **Vanilla JavaScript** (no frameworks) and tackles the **Level 3 (Advanced)** requirements. It allows users to track their salary, add expenses, visualize their remaining balance, convert currencies in real-time, and export PDF reports.
 
-👉 **[Live Demo Link Here]** *(Replace with your Vercel/Netlify URL)*
+👉 **[[Live Demo Link Here](https://prodesk-it-expenses.vercel.app/)]**
 
 ---
 

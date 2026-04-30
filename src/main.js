@@ -251,6 +251,11 @@ function refreshUI() {
 
 const chartCanvas = document.getElementById("chart");
 
+let chartColors = ["#e0e0e0"]; 
+expenses.forEach(() => {
+  chartColors.push(generateRandomColor());
+});
+
 const pieChart = new Chart(chartCanvas, {
   type: "pie",
   data: {
@@ -258,9 +263,10 @@ const pieChart = new Chart(chartCanvas, {
     datasets: [
       {
         label: "Amount",
-        data: [Number(remainBal.getAttribute("data-baseValue"))].concat([
-          ...expenses.map((expense) => expense[1]),
-        ]),
+        data: [
+          Math.max(0, Number(remainBal.getAttribute("data-baseValue"))),
+        ].concat([...expenses.map((expense) => expense[1])]),
+        backgroundColor: chartColors,
         borderWidth: 1,
       },
     ],
@@ -279,11 +285,13 @@ function addDataToChart(chart, label, baseData) {
   chart.data.labels.unshift("Remaining");
   chart.data.datasets[0].data.shift();
   chart.data.datasets[0].data.unshift(
-    Number(remainBal.getAttribute("data-baseValue")) * currentRate,
+    Math.max(0, Number(remainBal.getAttribute("data-baseValue")) * currentRate),
   );
 
   chart.data.labels.push(label);
   chart.data.datasets[0].data.push(baseData * currentRate);
+
+  chart.data.datasets[0].backgroundColor.push(generateRandomColor());
 
   chart.update();
 }
@@ -291,24 +299,29 @@ function addDataToChart(chart, label, baseData) {
 function deleteFromChart(chart, label, value) {
   let labels = [...chart.data.labels];
   let data = [...chart.data.datasets[0].data];
+  let bgColors = [...chart.data.datasets[0].backgroundColor];
+
   labels[0] = "Remaining";
-  data[0] = Number(remainBal.getAttribute("data-baseValue"));
+  data[0] = Math.max(0, Number(remainBal.getAttribute("data-baseValue")));
   for (let i = 1; i < labels.length; i++) {
     if (label == labels[i] && value == data[i]) {
       labels.splice(i, 1);
       data.splice(i, 1);
+      bgColors.splice(i, 1);
+      break;
     }
   }
 
   chart.data.labels = labels;
   chart.data.datasets[0].data = data;
+  chart.data.datasets[0].backgroundColor = bgColors;
 
   chart.update();
 }
 
 function updateChartCurrency() {
   const remainingBase = Number(remainBal.getAttribute("data-baseValue"));
-  let newData = [remainingBase * currentRate];
+  let newData = [Math.max(0, remainingBase * currentRate)];
 
   expenses.forEach((expense) => {
     newData.push(expense[1] * currentRate);
@@ -316,6 +329,11 @@ function updateChartCurrency() {
 
   pieChart.data.datasets[0].data = newData;
   pieChart.update();
+}
+
+function generateRandomColor() {
+  const randomHue = Math.floor(Math.random() * 360);
+  return `hsl(${randomHue}, 70%, 60%)`; 
 }
 
 /* GENERATE PDF REPORT */
@@ -337,7 +355,10 @@ genPdfBtn.addEventListener("click", () => {
   const cellWidth = 40;
   const cellHeight = 10;
 
-  const tableData = expenses.map((expense) => [expense[0], String((expense[1] * currentRate).toFixed(2))]);
+  const tableData = expenses.map((expense) => [
+    expense[0],
+    `${currentCurrency}${(expense[1] * currentRate).toFixed(2)}`,
+  ]);
   tableData.push(["Remaining", `${remainBal.innerText}`]);
   const rows = tableData;
 

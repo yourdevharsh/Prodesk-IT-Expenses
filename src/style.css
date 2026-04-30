@@ -5,12 +5,13 @@
   padding: 0;
 }
 
-body {
+main {
   font-family: Arial, Helvetica, sans-serif;
   background-color: #f4f6f9;
   color: #333;
   max-width: 600px;
   margin: 2rem auto;
+  margin-top: 0;
   padding: 1.5rem;
 }
 
@@ -158,11 +159,11 @@ button:disabled {
 #genPdfBtn {
   display: block;
   width: 100%;
-  background-color: #2980b9;
+  background-color: #044169;
   padding: 1rem;
   font-size: 1.1rem;
 }
 
 #genPdfBtn:hover {
-  background-color: #3498db;
+  background-color: #000000;
 }

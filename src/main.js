@@ -352,14 +352,14 @@ genPdfBtn.addEventListener("click", () => {
 
   const startX = 10;
   const startY = 30;
-  const cellWidth = 40;
+  const cellWidth = 60;
   const cellHeight = 10;
 
   const tableData = expenses.map((expense) => [
     expense[0],
-    `${symbols[currentCurrency]}${(expense[1] * currentRate).toFixed(2)}`,
+    `${currentCurrency} ${(expense[1] * currentRate).toFixed(2)}`,
   ]);
-  tableData.push(["Remaining", `${symbols[currentCurrency]}${remainBal.innerText}`]);
+  tableData.push(["Remaining", `${currentCurrency} ${remainBal.innerText}`]);
   const rows = tableData;
 
   rows.forEach((row, rowIndex) => {

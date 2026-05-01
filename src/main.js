@@ -1,16 +1,15 @@
 import "./style.css";
 
-/* ELEMENTS SELECTION */
-// SALARY & EXPENSE AMOUNT
+// ELEMENTS SELECTION
 const salaryAmtEl = document.getElementById("salaryAmt");
 const remainBal = document.getElementById("totalExp");
-// INPUTS
+
 const salaryInpEl = document.getElementById("salaryInp");
 const expNameInpEl = document.getElementById("expNameInp");
 const expAmtInpEl = document.getElementById("expAmtInp");
-// BUTTON TO ADD EXPENSES
+
 const addExpBtnEl = document.getElementById("addExpBtn");
-// LIST OF EXPENSES
+
 const expListEl = document.getElementById("expList");
 
 let expenses = [];
@@ -127,6 +126,7 @@ function validateExpenseInputs() {
   }
 }
 
+// LISTEN FOR ADDING EXPENSE
 addExpBtnEl.addEventListener("click", async (e) => {
   e.preventDefault();
 
@@ -168,6 +168,7 @@ addExpBtnEl.addEventListener("click", async (e) => {
   validateExpenseInputs();
 });
 
+// UPDATE COLOR OF BALANCE
 function updateColor() {
   const baseRemain = Number(remainBal.getAttribute("data-baseValue"));
   const baseSalary = Number(salaryAmtEl.getAttribute("data-baseValue"));
@@ -185,6 +186,7 @@ function alerForBal() {
   }
 }
 
+// LISTEN FOR DELETING EXPENSE
 expListEl.addEventListener("click", async (e) => {
   if (e.target.classList.contains("deleteItemBtn")) {
     const liEl = e.target.closest("li");
@@ -226,6 +228,7 @@ expListEl.addEventListener("click", async (e) => {
   }
 });
 
+// REFRESH FOR CURRENCY CHANGE
 function refreshUI() {
   const convertibles = document.querySelectorAll(".convertible");
 
@@ -247,11 +250,11 @@ function refreshUI() {
   updateColor();
 }
 
-/* PIE CHART */
+// PIE CHART
 
 const chartCanvas = document.getElementById("chart");
 
-let chartColors = ["#e0e0e0"]; 
+let chartColors = ["#e0e0e0"];
 expenses.forEach(() => {
   chartColors.push(generateRandomColor());
 });
@@ -333,10 +336,10 @@ function updateChartCurrency() {
 
 function generateRandomColor() {
   const randomHue = Math.floor(Math.random() * 360);
-  return `hsl(${randomHue}, 70%, 60%)`; 
+  return `hsl(${randomHue}, 70%, 60%)`;
 }
 
-/* GENERATE PDF REPORT */
+// GENERATE PDF REPORT
 
 const genPdfBtn = document.getElementById("genPdfBtn");
 
@@ -376,7 +379,7 @@ genPdfBtn.addEventListener("click", () => {
   report.save("expense-report.pdf");
 });
 
-/* RATE CONVERSION */
+// RATE CONVERSION
 
 async function getRate(to, from) {
   try {

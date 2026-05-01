@@ -166,3 +166,27 @@ button:disabled {
 #genPdfBtn:hover {
   background-color: #000000;
 }
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 500px) {
+  main {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .mainValues {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    text-align: center;
+  }
+
+  form div {
+    flex-direction: column;
+  }
+
+  #addExpBtn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
